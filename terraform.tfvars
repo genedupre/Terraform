@@ -1,0 +1,14 @@
+vsphere_user = "administrator@vsphere.local"
+vsphere_password = "Network@Programming1"
+vsphere_server = "vcenter.cloud2.local"
+datacenter = "Labo"
+datastore = "FreeNAS-FS"
+resource_pool = "DRS-Cluster/Resources"
+vm_template = "ubuntu-1804-tpl"
+vm_network = "VM Network"
+vm_hostname = "esli-heyvaert"
+vm_folder = "esli-heyvaert"
+vm_count = 20
+vm_cpu_cores = 1
+vm_ram = 1024
+vm_domain = "cloud2.local"
