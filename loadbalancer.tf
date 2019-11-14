@@ -1,3 +1,43 @@
+// Een "beetje" hacky
+// null_resource is eigenlijk de parent van alle resources
+// "The null_resource resource implements the standard resource lifecycle but takes no further action."
+// Bij de trigger moeten we een string opgeven, als die verandert --> dan is deze resource "tainted"
+// Dan moet met andere woorden de resource destroyed en opnieuw aangemaakt worden
+// Wellicht de meeste elegante manier om het doel te bereiken :-)
+// Wat is beter??? --> configuratie management zoals Ansible!
+
+resource "null_resource" "update_file" {
+  triggers = {
+    webservers = join(",", vsphere_virtual_machine.webserver.*.default_ip_address)
+  }
+
+  connection {
+    type = "ssh"
+    user = "student"
+    password = var.ubuntu_pass
+    host = vsphere_virtual_machine.loadbalancer.default_ip_address
+  }
+
+  provisioner "file" {
+    source = "nginx.conf"
+    destination = "/tmp/nginx.conf"
+  }
+
+  provisioner "file" {
+    content = templatefile("servers.tpl", {
+      ip_addrs = vsphere_virtual_machine.webserver.*.default_ip_address
+    })
+    destination = "/tmp/servers.conf"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo '${var.ubuntu_pass}' | sudo -S mv /tmp/nginx.conf /etc/nginx/nginx.conf",
+      "echo '${var.ubuntu_pass}' | sudo -S mv /tmp/servers.conf /etc/nginx/servers.conf",
+      "echo '${var.ubuntu_pass}' | sudo -S systemctl restart nginx",
+    ]
+  }
+}
 resource "vsphere_virtual_machine" "loadbalancer" {
   connection {
     type = "ssh"
@@ -13,7 +53,6 @@ resource "vsphere_virtual_machine" "loadbalancer" {
 
   num_cpus = var.vm_cpu_cores
   memory = var.vm_ram
-  count = 1
   guest_id = data.vsphere_virtual_machine.template.guest_id
 
   scsi_type = data.vsphere_virtual_machine.template.scsi_type
@@ -21,18 +60,6 @@ resource "vsphere_virtual_machine" "loadbalancer" {
   network_interface {
     network_id = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
-  }
-
-  provisioner "file" {
-    source = "nginx.conf"
-    destination = "/tmp/nginx.conf"
-  }
-
-  provisioner "file" {
-    content = templatefile("servers.tpl", {
-      ip_addrs = vsphere_virtual_machine.webserver.*.default_ip_address
-    })
-    destination = "/tmp/servers.conf"
   }
 
   provisioner "remote-exec" {
