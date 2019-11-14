@@ -8,26 +8,11 @@ variable "vsphere_password" {
 
 variable "vsphere_server" {
   description = "What is your vSphere server?"
-}
-
-variable "datacenter" {
-  description = "Which datacenter?"
+  default = "vcenter.cloud2.local"
 }
 
 variable "datastore" {
   description = "Which datastore?"
-}
-
-variable "resource_pool" {
-  description = "Which resource pool?"
-}
-
-variable "vm_template" {
-  description = "Which network?"
-}
-
-variable "vm_network" {
-  description = "Which network?"
 }
 
 variable "vm_hostname" {
@@ -48,8 +33,4 @@ variable "vm_cpu_cores" {
 
 variable "vm_ram" {
   description = "How much RAM (MB)?"
-}
-
-variable "vm_domain" {
-  description = "Which domain?"
 }
