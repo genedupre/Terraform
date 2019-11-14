@@ -37,13 +37,19 @@ resource "vsphere_folder" "folder" {
 }
 
 resource "vsphere_virtual_machine" "webserver" {
+  connection {
+    type = "ssh"
+    user = "student"
+    password = var.ubuntu_pass
+    host = self.default_ip_address
+  }
   folder = vsphere_folder.folder.path
   name = format("%s-%02d", var.vm_hostname, count.index)
   datastore_id = data.vsphere_datastore.datastore.id
   resource_pool_id = data.vsphere_resource_pool.pool.id
 
-  num_cpus = var.vm_cpu_cores
-  memory = var.vm_ram
+  //  num_cpus = var.vm_cpu_cores
+  //  memory = var.vm_ram
   count = var.vm_count
 
   guest_id = data.vsphere_virtual_machine.template.guest_id
@@ -61,13 +67,6 @@ resource "vsphere_virtual_machine" "webserver" {
       "echo '${var.ubuntu_pass}' | sudo -S apt install nginx -y",
       "echo '${var.ubuntu_pass}' | sudo -S sed -i 's/to nginx/to ${format("%s-%02d", var.vm_hostname, count.index)}/g' /var/www/html/index.nginx-debian.html"
     ]
-
-    connection {
-      type = "ssh"
-      user = "student"
-      password = var.ubuntu_pass
-      host = self.default_ip_address
-    }
   }
 
   disk {

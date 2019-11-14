@@ -1,4 +1,11 @@
 resource "vsphere_virtual_machine" "loadbalancer" {
+  connection {
+    type = "ssh"
+    user = "student"
+    password = var.ubuntu_pass
+    host = self.default_ip_address
+  }
+
   folder = vsphere_folder.folder.path
   name = var.vm_hostname_lb
   datastore_id = data.vsphere_datastore.datastore.id
@@ -19,28 +26,13 @@ resource "vsphere_virtual_machine" "loadbalancer" {
   provisioner "file" {
     source = "nginx.conf"
     destination = "/tmp/nginx.conf"
-
-    connection {
-      type = "ssh"
-      user = "student"
-      password = var.ubuntu_pass
-      host = self.default_ip_address
-    }
   }
 
   provisioner "file" {
+    content = templatefile("servers.tpl", {
+      ip_addrs = vsphere_virtual_machine.webserver.*.default_ip_address
+    })
     destination = "/tmp/servers.conf"
-    content = <<EOT
-%{ for ip in vsphere_virtual_machine.webserver.*.default_ip_address ~}
-server ${ip};
-%{ endfor ~}
-EOT
-    connection {
-      type = "ssh"
-      user = "student"
-      password = var.ubuntu_pass
-      host = self.default_ip_address
-    }
   }
 
   provisioner "remote-exec" {
@@ -51,13 +43,6 @@ EOT
       "echo '${var.ubuntu_pass}' | sudo -S mv /tmp/servers.conf /etc/nginx/servers.conf",
       "echo '${var.ubuntu_pass}' | sudo -S systemctl restart nginx",
     ]
-
-    connection {
-      type = "ssh"
-      user = "student"
-      password = var.ubuntu_pass
-      host = self.default_ip_address
-    }
   }
 
   disk {
