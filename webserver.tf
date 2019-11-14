@@ -36,7 +36,7 @@ resource "vsphere_folder" "folder" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-resource "vsphere_virtual_machine" "vm" {
+resource "vsphere_virtual_machine" "webserver" {
   folder = vsphere_folder.folder.path
   name = format("%s-%02d", var.vm_hostname, count.index)
   datastore_id = data.vsphere_datastore.datastore.id
@@ -55,6 +55,21 @@ resource "vsphere_virtual_machine" "vm" {
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
   }
 
+  provisioner "remote-exec" {
+    inline = [
+      "echo '${var.ubuntu_pass}' | sudo -S apt update",
+      "echo '${var.ubuntu_pass}' | sudo -S apt install nginx -y",
+      "echo '${var.ubuntu_pass}' | sudo -S sed -i 's/to nginx/to ${format("%s-%02d", var.vm_hostname, count.index)}/g' /var/www/html/index.nginx-debian.html"
+    ]
+
+    connection {
+      type = "ssh"
+      user = "student"
+      password = var.ubuntu_pass
+      host = self.default_ip_address
+    }
+  }
+
   disk {
     label = "disk_os"
     size = data.vsphere_virtual_machine.template.disks[0].size
@@ -67,7 +82,7 @@ resource "vsphere_virtual_machine" "vm" {
 
     customize {
       linux_options {
-        host_name = format("%s-%02d", var.vm_hostname ,count.index)
+        host_name = format("%s-%02d", var.vm_hostname, count.index)
         domain = "cloud2.local"
       }
 
