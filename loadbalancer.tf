@@ -15,7 +15,8 @@ resource "null_resource" "update_file" {
     type = "ssh"
     user = "student"
     password = var.ubuntu_pass
-    host = vsphere_virtual_machine.loadbalancer.default_ip_address
+    host = "vcenter.cloud2.local"
+    port = lookup(var.internal_ips, vsphere_virtual_machine.loadbalancer.default_ip_address)
   }
 
   provisioner "file" {
@@ -43,7 +44,8 @@ resource "vsphere_virtual_machine" "loadbalancer" {
     type = "ssh"
     user = "student"
     password = var.ubuntu_pass
-    host = self.default_ip_address
+    host = "vcenter.cloud2.local"
+    port = lookup(var.internal_ips, vsphere_virtual_machine.loadbalancer.default_ip_address)
   }
 
   folder = vsphere_folder.folder.path

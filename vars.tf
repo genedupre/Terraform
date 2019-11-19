@@ -42,3 +42,7 @@ variable "vm_ram" {
 variable "ubuntu_pass" {
   description = "User password?"
 }
+
+variable "internal_ips" {
+  
+}
