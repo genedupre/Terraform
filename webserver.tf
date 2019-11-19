@@ -41,7 +41,8 @@ resource "vsphere_virtual_machine" "webserver" {
     type = "ssh"
     user = "student"
     password = var.ubuntu_pass
-    host = self.default_ip_address
+    host = "vcenter.cloud2.local"
+    port = lookup(var.internal_ips, self.default_ip_address)
   }
   folder = vsphere_folder.folder.path
   name = format("%s-%02d", var.vm_hostname, count.index)
